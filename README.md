@@ -1,2 +1,34 @@
-# VideoSR
-Video Super-Resolution web app
+<a name="readme-top"></a>
+<div align="center">
+  <h3 align="center">Video SR</h3>
+</div>
+<div align=center>
+<img src='./assets/example_usage.png'>
+</div>
+
+## About
+
+Video super-resolution webapp.
+
+Supported models:
+- HAT
+- HDSRNet
+
+## Getting Started
+
+
+### Prerequisites
+
+  ```sh
+  git clone https://github.com/Frees4/VideoSR/tree/main
+  sudo apt install ffmpeg
+  pip install -r requirements.txt
+  ```
+**If running on local CUDA must be accessible**
+  
+## Usage
+
+  ```sh
+  python app.py
+  ```
+> Visit http://127.0.0.1:7860 in browser, checkout ./output for video results
