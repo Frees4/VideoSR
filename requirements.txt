@@ -1,0 +1,14 @@
+gradio
+torch
+torchvision
+Pillow
+gdown
+numpy
+scipy
+cmake
+opencv-python-headless
+encoded-video
+basicsr
+ffmpeg-python
+pytorchvideo
+timm
