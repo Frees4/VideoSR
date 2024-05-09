@@ -13,6 +13,7 @@ Video super-resolution webapp.
 Supported models:
 - HAT
 - HDSRNet
+- Restormer (image enhancement)
 
 ## Getting Started
 
@@ -23,6 +24,7 @@ Supported models:
   git clone https://github.com/Frees4/VideoSR/tree/main
   sudo apt install ffmpeg
   pip install -r requirements.txt
+  cd lib/HAT && python setup.py develop && cd ../../
   ```
 **If running on local CUDA must be accessible**
   
