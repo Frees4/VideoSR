@@ -1,5 +1,5 @@
 from pytorchvideo.data.encoded_video import EncodedVideo
-from torchvision.io import read_video, write_video
+from torchvision.io import write_video
 from abc import ABC
 import numpy as np
 import ffmpeg
