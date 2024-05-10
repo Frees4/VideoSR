@@ -3,7 +3,7 @@
   <h3 align="center">Video SR</h3>
 </div>
 <div align=center>
-<img src='./assets/example_usage.png'>
+<img src='./assets/usage_example.png'>
 </div>
 
 ## About
