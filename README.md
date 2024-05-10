@@ -21,7 +21,7 @@ Supported models:
 ### Prerequisites
 
   ```sh
-  git clone https://github.com/Frees4/VideoSR/tree/main
+  git clone https://github.com/Frees4/VideoSR.git
   sudo apt install ffmpeg
   pip install -r requirements.txt
   cd lib/HAT && python setup.py develop && cd ../../
@@ -34,3 +34,4 @@ Supported models:
   python app.py
   ```
 > Visit http://127.0.0.1:7860 in browser, checkout ./output for video results
+

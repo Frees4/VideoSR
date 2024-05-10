@@ -324,14 +324,14 @@ def main_tab():
                 start_sec = gr.Slider(minimum=0, maximum=3000, step=1, value=0, label="start_sec", interactive=True)
                 end_sec = gr.Slider(minimum=1, maximum=3000, step=1, value=6, label="end_sec", interactive=True)
             with gr.Group() as resolution:
-                resolution = gr.Radio(choices=['x4','360p', '480p', '720p', '1080p', '2K', '4K'], label="Upscaler",value='x4', interactive=True)
+                resolution = gr.Radio(choices=['x4','360p', '480p', '720p', '1080p', '2K', '4K'], label="Resolution",value='x4', interactive=True)
             with gr.Group() as video_setup:
                 out_fps = gr.Slider(minimum=-1, maximum=60, step=1, value=-1, label="output_fps (original fps: -1)", interactive=True)
             with gr.Group() as upscaler_setup:
                 upscaler = gr.Radio(choices=['HDSRNet','HAT'], label="Upscaler",value='HDSRNet', interactive=True)
             with gr.Group() as tiling_setup:
-                tile_size = gr.Slider(minimum=0, maximum=240, value=208, step=8, label="Tile Size", visible=True)
-                tile_overlap = gr.Slider(minimum=0, maximum=32, value=16, step=8, label="Tile Overlap", visible=True)
+                tile_size = gr.Slider(minimum=0, maximum=240, value=208, step=8, label="Tile Size (disabled: 0)", visible=True)
+                tile_overlap = gr.Slider(minimum=0, maximum=32, value=16, step=8, label="Tile Overlap (disabled: 0)", visible=True)
             with gr.Row():
                 restormer_task = gr.Dropdown(value='Disabled', choices=['Disabled','Motion Deblurring','Real Denoising', 'Deraining'], label='Restormer', interactive=True)
             with gr.Group() as control:
