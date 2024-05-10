@@ -18,6 +18,7 @@ container = None
 hat_model = None
 hdsrnet_model = None
 restormer_model = None
+should_continue = True
 
 
 def upscale(img, selected_model=None, tile_size=None, tile_overlap=None):
@@ -178,26 +179,27 @@ def predict_fn(filepath, start_sec, end_sec, resolution, out_fps=0, upscaler='HD
     Returns:
         str: Path to the output video file after processing.
     """
-    global container_constructor, container, hdsrnet_model, hat_model, restormer_model
+    global container_constructor, container, hdsrnet_model, hat_model, restormer_model, should_continue
+    should_continue = True
     # Check if input video is not None
     if filepath is None:
         return None
     # Check if input numeric values is Integer
+    if isinstance(start_sec, float):
+        start_sec = int(start_sec)
+        gr.Info(f"Start sec change to integer value {start_sec}")
+    if isinstance(end_sec, float):
+        end_sec = int(end_sec)
+        gr.Info(f"End sec change to integer value {end_sec}")
+    if isinstance(out_fps, float):
+        out_fps = int(out_fps)
+        gr.Info(f"Out fps change to integer value {out_fps}")
     if isinstance(tile_size, float):
         tile_size = int(tile_size)
         gr.Info(f"Tile size change to integer value {tile_size}")
     if isinstance(tile_overlap, float):
         tile_overlap = int(tile_overlap)
-        gr.Info(f"Tile overlap change to integer value {tile_size}")
-    if isinstance(start_sec, float):
-        start_sec = int(start_sec)
-        gr.Info(f"Start sec change to integer value {tile_size}")
-    if isinstance(end_sec, float):
-        end_sec = int(end_sec)
-        gr.Info(f"End sec change to integer value {tile_size}")
-    if isinstance(out_fps, float):
-        out_fps = int(out_fps)
-        gr.Info(f"Out fps change to integer value {tile_size}")
+        gr.Info(f"Tile overlap change to integer value {tile_overlap}")
     # Check input values validity
     if tile_size == 0:
         tile_size = None
@@ -236,12 +238,15 @@ def predict_fn(filepath, start_sec, end_sec, resolution, out_fps=0, upscaler='HD
                                         start_time=start_sec, duration=end_sec - start_sec)
     if out_fps == -1:
         out_fps = container.video_fps()
+        
     for b in progress.tqdm(range(0, end_sec - start_sec, MAX_DURATION_BATCH), desc='🎠 Clip'):
+        if not should_continue:
+            break
         b_start = b + start_sec
         clip_duration = MAX_DURATION_BATCH if b_start+MAX_DURATION_BATCH<=end_sec else end_sec - b_start
         logger.debug("🎠 Clip {}s - {}s".format(b_start, b_start+clip_duration))
         for i in progress.tqdm(range(0, MAX_DURATION_BATCH if b_start+MAX_DURATION_BATCH<=end_sec else end_sec - b_start, frame_len), desc='🖼️ Processing step'):
-            if b_start + i > container.total_duration:
+            if b_start + i > container.total_duration or not should_continue:
                 break
             logger.debug(f"🖼️ Processing step {i + 1}/{MAX_DURATION_BATCH if b_start+MAX_DURATION_BATCH<=end_sec else end_sec - b_start}...")
             video, audio = None, None
@@ -249,6 +254,9 @@ def predict_fn(filepath, start_sec, end_sec, resolution, out_fps=0, upscaler='HD
                 video, audio = inference_step(vid=container, duration=frame_len, resolution=resolution, out_fps=out_fps, upscaler=upscaler, tile_size=tile_size, tile_overlap=tile_overlap, restormer_task=restormer_task)
             except torch.cuda.OutOfMemoryError:
                 gr.Warning('Cuda out of memory on server. Please set appropriate Tile size and Tile overlap')
+                return None
+            except np.core._exceptions._ArrayMemoryError:
+                gr.Warning('Ouf RAM. Try to change MAX_DURATION_BATCH parameter in shared.py module')
                 return None
             if i == 0:
                 video_all = np.zeros([out_fps*clip_duration, video.shape[1], video.shape[2], video.shape[3]], np.uint8)
@@ -262,9 +270,17 @@ def predict_fn(filepath, start_sec, end_sec, resolution, out_fps=0, upscaler='HD
         container.remux(video_all, audio_all)
         del audio_all
         del video_all
+    if not container.outSink:
+        logger.info(f"Stop before inference step. Empty output")
+        return None
     container.close()
     logger.info(f"✅ Done!")
     return OUTPUT_PATH+name+'.mp4'
+
+def stop_inference():
+    global should_continue
+    should_continue = False
+    gr.Info(f"Stopping... Please wait")
 
 def on_video_change(filepath, start_sec, out_fps):
     """
@@ -284,7 +300,7 @@ def on_video_change(filepath, start_sec, out_fps):
     """
     if filepath is None:
         stats = ""
-        return start_sec, out_fps, stats, None
+        return start_sec, out_fps, stats, None, gr.Button(value="Stop", visible=True, variant='stop',interactive=False)
     global container
     logger.info(f"📹 Input video: {filepath.split('/')[-1]}")
     name = os.path.splitext(os.path.basename(filepath))[0]
@@ -304,7 +320,7 @@ def on_video_change(filepath, start_sec, out_fps):
     outputs_video = None
     return [gr.Slider(value=start_sec if start_sec<max_duration else 0, maximum=max_duration), 
             gr.Slider(value=round(max_duration) , maximum=max_duration),\
-            stats, outputs_video
+            stats, outputs_video, gr.Button(value="Stop", visible=True, variant='stop',interactive=True)
             ]
 
 def main_tab():
@@ -330,21 +346,23 @@ def main_tab():
             with gr.Group() as upscaler_setup:
                 upscaler = gr.Radio(choices=['HDSRNet','HAT'], label="Upscaler",value='HDSRNet', interactive=True)
             with gr.Group() as tiling_setup:
-                tile_size = gr.Slider(minimum=0, maximum=240, value=208, step=8, label="Tile Size (disabled: 0)", visible=True)
-                tile_overlap = gr.Slider(minimum=0, maximum=32, value=16, step=8, label="Tile Overlap (disabled: 0)", visible=True)
+                tile_size = gr.Slider(minimum=0, maximum=240, value=208, step=8, label="Tile Size", visible=True)
+                tile_overlap = gr.Slider(minimum=0, maximum=32, value=16, step=8, label="Tile Overlap", visible=True)
             with gr.Row():
                 restormer_task = gr.Dropdown(value='Disabled', choices=['Disabled','Motion Deblurring','Real Denoising', 'Deraining'], label='Restormer', interactive=True)
             with gr.Group() as control:
                 with gr.Row():
                     submit = gr.Button("Submit")
+            stop_button = gr.Button(value="Stop", visible=True, variant='stop',interactive=False)
         with gr.Column():
             outputs_video = gr.Video(interactive=False)
     examples = gr.Examples([
-        ['./assets/examples/video_example_1_donut_240p.mp4'],
+        ['./assets/examples/video_example_1_donut_144p.mp4'],
         ['./assets/examples/video_example_2_photo_240p.mp4']
     ], inputs=[inputs_video, start_sec, end_sec], outputs=[inputs_video])
     submit.click(fn=predict_fn, inputs=[inputs_video, start_sec, end_sec, resolution, out_fps, upscaler, tile_size, tile_overlap, restormer_task], outputs=[outputs_video])
-    inputs_video.change(fn=on_video_change, inputs=[inputs_video, start_sec, out_fps], outputs=[start_sec, end_sec, stats, outputs_video])
+    inputs_video.change(fn=on_video_change, inputs=[inputs_video, start_sec, out_fps], outputs=[start_sec, end_sec, stats, outputs_video, stop_button])
+    stop_button.click(fn=stop_inference)
 
 with gr.Blocks(title="Video Super Resolution") as app:
     gr.Label("Video Super Resolution")

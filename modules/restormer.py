@@ -35,7 +35,7 @@ def init_restormer(restormer_task):
     # Get model weights and parameters
     model_path = RESTORMER_WEIGHTS[restormer_task]
     if not os.path.exists(model_path):
-        gr.Info("Downloading Restormer model weights for {restormer_task}. Please wait...")
+        gr.Info(f"Downloading Restormer model weights for {restormer_task}. Please wait...")
         logger.debug(f'Downloading Restormer model weights for {restormer_task} task to {RESTORMER_BASE_MODELS_PATH}')
         if not os.path.exists(RESTORMER_BASE_MODELS_PATH):
             os.mkdir(RESTORMER_BASE_MODELS_PATH)
