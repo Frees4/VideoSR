@@ -8,6 +8,8 @@ RESTORMER_PRETRAINED_PATHS = {'Motion Deblurring': 'https://github.com/swz30/Res
 HAT_ROOT_PATH = 'lib/HAT'
 HAT_OPTIONS_PATH = 'lib/HAT/options/test/HAT_SRx4_ImageNet-pretrain.yml'
 OUTPUT_PATH = './outputs/'
+LOG_DIR = 'logs/'
+LOG_FILE = 'log.log'
 RESOLUTIONS = {
     '360p': (640, 360),
     '480p': (848, 480),
@@ -16,5 +18,5 @@ RESOLUTIONS = {
     '2K': (2560, 1440),
     '4K': (3840, 2160)
 }
-MAX_DURATION_BATCH = 200
+MAX_DURATION_BATCH = 30
 SCALE = 4

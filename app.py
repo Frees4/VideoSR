@@ -346,8 +346,8 @@ def main_tab():
             with gr.Group() as upscaler_setup:
                 upscaler = gr.Radio(choices=['HDSRNet','HAT'], label="Upscaler",value='HDSRNet', interactive=True)
             with gr.Group() as tiling_setup:
-                tile_size = gr.Slider(minimum=0, maximum=240, value=208, step=8, label="Tile Size", visible=True)
-                tile_overlap = gr.Slider(minimum=0, maximum=32, value=16, step=8, label="Tile Overlap", visible=True)
+                tile_size = gr.Slider(minimum=0, maximum=240, value=208, step=8, label="Tile Size (off: 0)", visible=True)
+                tile_overlap = gr.Slider(minimum=0, maximum=32, value=16, step=8, label="Tile Overlap (off: 0)", visible=True)
             with gr.Row():
                 restormer_task = gr.Dropdown(value='Disabled', choices=['Disabled','Motion Deblurring','Real Denoising', 'Deraining'], label='Restormer', interactive=True)
             with gr.Group() as control:
@@ -357,7 +357,7 @@ def main_tab():
         with gr.Column():
             outputs_video = gr.Video(interactive=False)
     examples = gr.Examples([
-        ['./assets/examples/video_example_1_donut_144p.mp4'],
+        ['./assets/examples/video_example_1_donut_240p.mp4'],
         ['./assets/examples/video_example_2_photo_240p.mp4']
     ], inputs=[inputs_video, start_sec, end_sec], outputs=[inputs_video])
     submit.click(fn=predict_fn, inputs=[inputs_video, start_sec, end_sec, resolution, out_fps, upscaler, tile_size, tile_overlap, restormer_task], outputs=[outputs_video])
